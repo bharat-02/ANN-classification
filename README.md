@@ -1,130 +1,132 @@
-# ANN Classification — Customer Churn Prediction
+# ANN-Based Customer Churn Prediction
 
-An **Artificial Neural Network (ANN)** based customer churn prediction project built with **TensorFlow/Keras** and deployed as an interactive **Streamlit** web application.
+An end-to-end **Artificial Neural Network (ANN)** project for predicting customer churn using demographic, financial, and account-related features. The trained model is integrated into an interactive **Streamlit** application and deployed for real-time inference.
 
-The model predicts whether a bank customer is likely to **exit/churn** based on customer information such as geography, gender, age, credit score, balance, tenure, number of products, credit card ownership, and active membership.
+## 🔗 Live Demo
 
-## 🚀 Live Demo
+**[Launch the Customer Churn Prediction App](https://ann-classification-msga88z4jmnzvharlhnwbf.streamlit.app/)**
 
-👉 **[Try the Live Application](https://ann-classification-msga88z4jmnzvharlhnwbf.streamlit.app/)**
+## 📌 Overview
 
-## 📌 Project Overview
+Customer churn prediction is a binary classification problem in which the objective is to identify customers who are likely to discontinue a service.
 
-Customer churn is an important problem for banks and financial institutions. Predicting customers who are likely to leave can help organizations identify at-risk customers and take appropriate retention actions.
+This project implements a neural-network-based solution that:
 
-This project uses an **Artificial Neural Network (ANN)** to perform binary classification:
+* Preprocesses categorical and numerical features
+* Encodes categorical variables using `OneHotEncoder` and `LabelEncoder`
+* Scales numerical features
+* Trains an Artificial Neural Network using TensorFlow/Keras
+* Saves the trained model and preprocessing artifacts
+* Performs real-time predictions through Streamlit
+* Deploys the application for online inference
 
-* `0` → Customer stays
-* `1` → Customer exits
-
-The project includes data preprocessing, model training, model evaluation, prediction, and deployment using Streamlit.
-
-## 🧠 Machine Learning Workflow
-
-```text
-Raw Dataset
-     ↓
-Data Preprocessing
-     ↓
-Feature Encoding
-     ↓
-Feature Scaling
-     ↓
-Train/Test Split
-     ↓
-Artificial Neural Network
-     ↓
-Model Training
-     ↓
-Model Evaluation
-     ↓
-Save Model & Preprocessors
-     ↓
-Streamlit Application
-     ↓
-Customer Churn Prediction
-```
-
-## 📊 Dataset
-
-The project uses the **Churn Modelling** dataset.
-
-Important input features include:
-
-| Feature          | Description                              |
-| ---------------- | ---------------------------------------- |
-| Geography        | Customer's country/region                |
-| Gender           | Customer's gender                        |
-| Age              | Customer age                             |
-| Credit Score     | Customer credit score                    |
-| Balance          | Account balance                          |
-| Tenure           | Number of years with the bank            |
-| Num Of Products  | Number of banking products               |
-| Has Credit Card  | Whether the customer has a credit card   |
-| Is Active Member | Whether the customer is an active member |
-| Estimated Salary | Customer's estimated salary              |
-
-### Target Variable
-
-**Exited**
+## 🏗️ Solution Architecture
 
 ```text
-0 → Customer did not leave
-1 → Customer exited
+                    Customer Data
+                         │
+                         ▼
+                ┌─────────────────┐
+                │ Data Preprocess. │
+                └────────┬────────┘
+                         │
+             ┌───────────┴───────────┐
+             ▼                       ▼
+      Categorical Features     Numerical Features
+             │                       │
+             ▼                       ▼
+       Encoding                  Scaling
+             │                       │
+             └───────────┬───────────┘
+                         ▼
+                ┌─────────────────┐
+                │      ANN Model   │
+                │   TensorFlow     │
+                │     / Keras      │
+                └────────┬────────┘
+                         │
+                         ▼
+                 Churn Probability
+                         │
+                         ▼
+                 Streamlit Web App
+                         │
+                         ▼
+                  Prediction Result
 ```
 
-## 🤖 Artificial Neural Network
+## 🧠 Model
 
-The project uses an ANN for binary classification.
+The project uses an **Artificial Neural Network** for binary classification.
 
-The basic architecture consists of:
+The model receives processed customer attributes and produces a probability representing the likelihood of customer churn.
+
+### Input Features
+
+| Feature            | Description                      |
+| ------------------ | -------------------------------- |
+| Geography          | Customer's geographical location |
+| Gender             | Customer gender                  |
+| Age                | Customer age                     |
+| Credit Score       | Customer credit score            |
+| Balance            | Customer account balance         |
+| Tenure             | Customer relationship duration   |
+| Number of Products | Number of banking products       |
+| Has Credit Card    | Credit card ownership            |
+| Is Active Member   | Customer activity status         |
+| Estimated Salary   | Estimated customer salary        |
+
+### Target
 
 ```text
-Input Features
-      ↓
-Dense Layer
-      ↓
-Activation Function
-      ↓
-Dense Layer
-      ↓
-Activation Function
-      ↓
-Output Layer
-      ↓
-Sigmoid
-      ↓
-Churn Probability
+Exited
+0 → Customer retained
+1 → Customer churned
 ```
 
-The output represents the probability that a customer will churn.
-
-For example:
-
-```text
-Prediction Probability = 0.82
-```
-
-can be interpreted as a high predicted probability of churn, subject to the application's chosen classification threshold.
-
-## 🔧 Technologies Used
+## ⚙️ Technologies
 
 * **Python**
+* **TensorFlow / Keras**
+* **Scikit-learn**
 * **Pandas**
 * **NumPy**
-* **Scikit-learn**
-* **TensorFlow / Keras**
 * **Streamlit**
 * **Jupyter Notebook**
-* **Pickle**
+* **Git & GitHub**
 
-## 📁 Project Structure
+## 🔄 Data Preprocessing
+
+The application uses the same preprocessing pipeline during inference that was used during model development.
+
+### Categorical Encoding
+
+**Geography**
+
+```python
+OneHotEncoder
+```
+
+**Gender**
+
+```python
+LabelEncoder
+```
+
+### Numerical Scaling
+
+Numerical features are transformed using a trained scaler before being passed to the neural network.
+
+The preprocessing artifacts are persisted and loaded by the Streamlit application.
+
+## 📁 Repository Structure
 
 ```text
 ANN-classification/
 │
 ├── app.py
 ├── Churn_Modelling.csv
+│
 ├── experiments.ipynb
 ├── prediction.ipynb
 │
@@ -138,133 +140,58 @@ ANN-classification/
 └── README.md
 ```
 
-## ⚙️ Installation
+## 🚀 Getting Started
+
+### Prerequisites
+
+* Python 3.10 / 3.11
+* Git
+* pip
 
 ### 1. Clone the repository
 
 ```bash
 git clone https://github.com/bharat-02/ANN-classification.git
-```
-
-### 2. Navigate to the project
-
-```bash
 cd ANN-classification
 ```
 
-### 3. Create a virtual environment
+### 2. Create a virtual environment
 
 ```bash
 python -m venv venv
 ```
 
-### 4. Activate the environment
+### 3. Activate the environment
 
-**Windows PowerShell:**
+**Windows PowerShell**
 
 ```powershell
 .\venv\Scripts\Activate.ps1
 ```
 
-**Windows Command Prompt:**
+**Windows CMD**
 
 ```cmd
 venv\Scripts\activate
 ```
 
-### 5. Install dependencies
+### 4. Install dependencies
 
 ```bash
 python -m pip install -r requirements.txt
 ```
 
-## ▶️ Run the Streamlit Application
-
-After installing the dependencies:
+### 5. Run the application
 
 ```bash
 python -m streamlit run app.py
 ```
 
-The application will open locally at:
+The application will be available at:
 
 ```text
 http://localhost:8501
 ```
-
-## 🖥️ Streamlit Application
-
-The application allows users to enter customer information through an interactive interface.
-
-Example inputs include:
-
-```text
-Geography          → Germany
-Gender             → Male
-Age                → 35
-Balance            → 50000
-Credit Score       → 650
-Estimated Salary   → 75000
-Tenure             → 5
-Number of Products → 2
-Has Credit Card    → 1
-Is Active Member   → 1
-```
-
-The entered information is processed using the same preprocessing objects used during model development and passed to the trained ANN model.
-
-## 🔄 Preprocessing
-
-The project uses different preprocessing techniques for categorical and numerical features.
-
-### One-Hot Encoding
-
-`Geography` is transformed using a `OneHotEncoder`.
-
-```python
-onehot_encoder_geo
-```
-
-### Label Encoding
-
-`Gender` is transformed using a `LabelEncoder`.
-
-```python
-label_encoder_gender
-```
-
-### Feature Scaling
-
-Numerical features are scaled using the saved scaler:
-
-```python
-scaler.pkl
-```
-
-The preprocessing objects are saved and reused during prediction to ensure that the application applies the same transformations used during model training.
-
-## 💾 Saved Model and Preprocessors
-
-The repository contains the trained model and preprocessing objects:
-
-```text
-model.h5
-scaler.pkl
-onehot_encoder_geo.pkl
-label_encoder_gender.pkl
-```
-
-These files allow the Streamlit application to make predictions without retraining the model every time the application starts.
-
-## 📓 Notebooks
-
-### `experiments.ipynb`
-
-Contains the model development and experimentation workflow.
-
-### `prediction.ipynb`
-
-Contains the prediction-related workflow used for testing the trained model.
 
 ## 🌐 Deployment
 
@@ -272,16 +199,91 @@ The application is deployed using **Streamlit Community Cloud**.
 
 ### Live Application
 
-**[ANN Customer Churn Prediction — Live Demo](https://ann-classification-msga88z4jmnzvharlhnwbf.streamlit.app/)**
+**[Open the deployed application →](https://ann-classification-msga88z4jmnzvharlhnwbf.streamlit.app/)**
 
-## 🎯 Project Objectives
+The deployed application provides an interactive interface where users can enter customer attributes and receive a churn prediction.
 
-* Understand the customer churn prediction problem.
-* Perform preprocessing of categorical and numerical data.
-* Build an Artificial Neural Network for binary classification.
-* Train and evaluate the ANN model.
-* Save the trained model and preprocessing objects.
-* Create an interactive Streamlit interface.
-* Deploy the machine learning application online.
+## 📊 Prediction Workflow
 
-## 🔮 Future I
+```text
+User Input
+    ↓
+Input Validation
+    ↓
+Categorical Encoding
+    ↓
+Feature Scaling
+    ↓
+ANN Inference
+    ↓
+Churn Probability
+    ↓
+Classification Result
+```
+
+## 💾 Model Artifacts
+
+The repository contains the trained model and preprocessing artifacts required for inference:
+
+| File                       | Purpose                  |
+| -------------------------- | ------------------------ |
+| `model.h5`                 | Trained ANN model        |
+| `scaler.pkl`               | Numerical feature scaler |
+| `onehot_encoder_geo.pkl`   | Geography encoder        |
+| `label_encoder_gender.pkl` | Gender encoder           |
+
+Persisting these artifacts ensures that inference uses the same transformations established during model development.
+
+## 📓 Development Notebooks
+
+### `experiments.ipynb`
+
+Contains the model development and experimentation workflow, including data preparation and ANN training.
+
+### `prediction.ipynb`
+
+Contains the prediction and inference workflow for the trained model.
+
+## 🔬 Key Implementation Concepts
+
+This project demonstrates practical implementation of:
+
+* Binary classification
+* Artificial Neural Networks
+* Feature engineering
+* One-hot encoding
+* Label encoding
+* Feature scaling
+* Model persistence
+* Real-time model inference
+* Streamlit application development
+* Machine learning deployment
+
+## 🔮 Future Enhancements
+
+Potential improvements include:
+
+* Hyperparameter optimization
+* Cross-validation
+* Model performance benchmarking
+* Explainable AI integration
+* Prediction probability visualization
+* Improved input validation
+* Model versioning
+* Automated CI/CD deployment
+* Production-grade API integration
+
+## 👨‍💻 Author
+
+### Bharat Kumar
+
+**Data Science & Machine Learning Enthusiast**
+
+* GitHub: [bharat-02](https://github.com/bharat-02)
+* LinkedIn: [Bharat Kumar](https://www.linkedin.com/in/bharat-kumar-a74b26346/)
+
+---
+
+⭐ If you find this project useful, consider giving the repository a star.
+
+**Live Demo:** [ANN Customer Churn Prediction](https://ann-classification-msga88z4jmnzvharlhnwbf.streamlit.app/)
