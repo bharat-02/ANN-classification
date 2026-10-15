@@ -5,7 +5,7 @@ Fixes vs original app.py:
 - Prediction only runs on button press (was running at import/slider time, incl. with empty inputs).
 - Shared predict.predict_churn pipeline => identical preprocessing to training.
 - Input validation + graceful errors for unknown categories.
-- Threshold slider + probability display.
+- Fixed decision threshold + probability display (no user threshold control).
 """
 import streamlit as st
 
