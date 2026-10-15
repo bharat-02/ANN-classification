@@ -9,7 +9,17 @@ app, feature-dependency analysis, and automated verification tests.
 > A predicted churn probability is a **model estimate, not a guarantee** that
 > a customer will actually leave.
 
+## 🚀 Live Demo
+
+Try the ANN Classification application online:
+
+**[Launch Live Demo](https://ann-classification-jxcz5dsv5jz9juhktavvcy.streamlit.app/)**
+
+Explore the deployed application to enter input features and obtain churn classification predictions using the trained ANN model.
+
 ## Contents
+
+- [🚀 Live Demo](#live-demo)
 
 - [A. Project overview](#a-project-overview)
 - [B. Architecture and directory structure](#b-architecture-and-directory-structure)
