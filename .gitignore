@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+# Virtual environments
+venv/
+.venv/
+env/
+# Jupyter
+.ipynb_checkpoints/
+# TensorBoard / logs
+logs/
+regressionlogs/
+*.log
+# Streamlit secrets (never commit)
+.streamlit/secrets.toml
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+# Large generated artifacts (model.h5 + *.pkl are intentionally tracked — the app needs them)
+*.keras
+*.onnx
