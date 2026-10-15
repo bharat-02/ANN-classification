@@ -1,8 +1,12 @@
+# Verified working set (venv: Python 3.11.6, TF 2.15.0 CPU). Install with:
+#   venv\Scripts\python.exe -m pip install -r requirements.txt
 tensorflow==2.15.0
-pandas 
-numpy 
-scikit-learn
-tensorboard
-matplotlib
-streamlit
-scikeras
+keras==2.15.0
+scikit-learn==1.9.1
+pandas==3.0.6
+numpy==1.26.4
+matplotlib==3.11.2
+streamlit==1.60.0
+scikeras==0.12.0
+tensorboard==2.15.2
+scipy==1.17.1

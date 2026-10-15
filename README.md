@@ -1,289 +1,171 @@
-# ANN-Based Customer Churn Prediction
+# ANN Customer Churn Prediction
 
-An end-to-end **Artificial Neural Network (ANN)** project for predicting customer churn using demographic, financial, and account-related features. The trained model is integrated into an interactive **Streamlit** application and deployed for real-time inference.
+End-to-end **Artificial Neural Network (TensorFlow/Keras)** binary classifier predicting
+bank customer churn (`Exited`) from demographic, financial, and account features,
+with an interactive **Streamlit** app for real-time inference.
 
-## 🔗 Live Demo
+## Overview & objective
 
-**[Launch the Customer Churn Prediction App](https://ann-classification-msga88z4jmnzvharlhnwbf.streamlit.app/)**
+Binary classification: identify customers likely to discontinue the service
+(`Exited`: `0` = retained, `1` = churned). Because churners are the minority
+(~20%), model selection prioritizes **F1 / ROC-AUC / PR-AUC and recall**,
+not accuracy alone.
 
-## 📌 Overview
+## Dataset & target
 
-Customer churn prediction is a binary classification problem in which the objective is to identify customers who are likely to discontinue a service.
+`Churn_Modelling.csv` — 10,000 rows, no missing values, no duplicates.
 
-This project implements a neural-network-based solution that:
+| Feature | Type |
+|---|---|
+| CreditScore, Age, Tenure, Balance, NumOfProducts, HasCrCard, IsActiveMember, EstimatedSalary | numeric |
+| Geography (France/Germany/Spain) | categorical → OneHot |
+| Gender (Female/Male) | categorical → Label |
+| **Exited** | **target (binary)** |
 
-* Preprocesses categorical and numerical features
-* Encodes categorical variables using `OneHotEncoder` and `LabelEncoder`
-* Scales numerical features
-* Trains an Artificial Neural Network using TensorFlow/Keras
-* Saves the trained model and preprocessing artifacts
-* Performs real-time predictions through Streamlit
-* Deploys the application for online inference
+Class distribution: retained 7,963 (79.6%) / churned 2,037 (20.4%).
 
-## 🏗️ Solution Architecture
+## Technologies
 
-```text
-                    Customer Data
-                         │
-                         ▼
-                ┌─────────────────┐
-                │ Data Preprocess. │
-                └────────┬────────┘
-                         │
-             ┌───────────┴───────────┐
-             ▼                       ▼
-      Categorical Features     Numerical Features
-             │                       │
-             ▼                       ▼
-       Encoding                  Scaling
-             │                       │
-             └───────────┬───────────┘
-                         ▼
-                ┌─────────────────┐
-                │      ANN Model   │
-                │   TensorFlow     │
-                │     / Keras      │
-                └────────┬────────┘
-                         │
-                         ▼
-                 Churn Probability
-                         │
-                         ▼
-                 Streamlit Web App
-                         │
-                         ▼
-                  Prediction Result
+Python 3.11 · TensorFlow/Keras 2.15 · scikit-learn · pandas · NumPy ·
+matplotlib · Streamlit · (scikeras, tensorboard — see `requirements.txt`).
+
+## Project structure
+
+```
+├── app.py                  # Streamlit app (fixed: cached model, form+button, validation)
+├── train.py                # Reproducible pipeline: preprocess → train → compare → save → plot
+├── predict.py              # Shared inference (train/serve consistency), used by app.py
+├── test_verify.py          # Save/load, unseen samples, edge cases, overfitting check
+├── Churn_Modelling.csv     # Dataset (preserved)
+├── experiments.ipynb       # Original classification experiment (kept for history)
+├── prediction.ipynb        # Original inference walkthrough (kept for history)
+├── hyperparametertuningann.ipynb  # Original grid-search draft, never executed (kept)
+├── salaryregression.ipynb  # Unrelated salary-regression experiment (kept, deprecated — see Limitations)
+├── model.h5                # Final ANN (best by val F1)
+├── scaler.pkl / onehot_encoder_geo.pkl / label_encoder_gender.pkl  # Fitted on TRAIN only
+├── feature_order.json      # Canonical feature order (12 cols)
+├── results/metrics.json    # Measured val + test metrics
+├── results/training_curves.png / results/confusion_matrix.png
+├── requirements.txt        # Pinned, verified versions
+└── .gitignore
 ```
 
-## 🧠 Model
+## Preprocessing (leakage-fixed)
 
-The project uses an **Artificial Neural Network** for binary classification.
+1. Drop identifiers (`RowNumber`, `CustomerId`, `Surname`).
+2. **Stratified** split 70/15/15 (train 7,000 / val 1,500 / test 1,500;
+   churn rates 0.2037 / 0.2040 / 0.2033).
+3. Fit **only on train**: `LabelEncoder` (Gender),
+   `OneHotEncoder(handle_unknown='ignore')` (Geography), `StandardScaler` (all 12 features).
+4. Fixed column order in `feature_order.json`; `predict.py` applies the identical pipeline.
+5. Class imbalance handled via stratified splits + F1-based selection + one
+   class-weighted ANN variant (`{0: 0.628, 1: 2.454}`); resampling was not needed.
 
-The model receives processed customer attributes and produces a probability representing the likelihood of customer churn.
+The original notebooks fitted encoders/scaler on the **full dataset before
+splitting** (leakage) and used a single unstratified 80/20 split with the test
+set doubling as validation. Both are fixed in `train.py`.
 
-### Input Features
+## ANN architecture & training
 
-| Feature            | Description                      |
-| ------------------ | -------------------------------- |
-| Geography          | Customer's geographical location |
-| Gender             | Customer gender                  |
-| Age                | Customer age                     |
-| Credit Score       | Customer credit score            |
-| Balance            | Customer account balance         |
-| Tenure             | Customer relationship duration   |
-| Number of Products | Number of banking products       |
-| Has Credit Card    | Credit card ownership            |
-| Is Active Member   | Customer activity status         |
-| Estimated Salary   | Estimated customer salary        |
+Framework preserved (TensorFlow/Keras). Compared in one harness (Adam, batch 32,
+binary cross-entropy, EarlyStopping + ReduceLROnPlateau):
 
-### Target
+| Config | Val acc | Val F1 | Val ROC-AUC | Val PR-AUC | Best epoch |
+|---|---|---|---|---|---|
+| baseline 64×32, lr 0.01, no reg (original-style) | 0.8407 | 0.5286 | 0.8172 | 0.6235 | 3 |
+| opt 64×32, dropout 0.3, L2 1e-4, lr 0.001 | 0.8720 | 0.6000 | 0.8798 | 0.7224 | 52 |
+| small 32×16, dropout 0.2, lr 0.001 | 0.8687 | 0.5817 | 0.8810 | 0.7252 | 76 |
+| **opt + class_weight (FINAL)** | 0.8047 | **0.6219** | 0.8788 | 0.7168 | 75 |
+| LogReg (baseline) | 0.8100 | 0.2893 | 0.7846 | 0.5067 | – |
+| RandomForest balanced (baseline) | 0.8567 | 0.6362 | 0.8755 | 0.6895 | – |
 
-```text
-Exited
-0 → Customer retained
-1 → Customer churned
-```
+Selected **opt + class_weight** (best ANN by val F1). Note: RandomForest has a
+marginally higher val F1 (0.6362) but lower recall (0.614 vs 0.788) and lower
+PR-AUC; for churn detection, catching churners (recall) matters, and this repo
+is ANN-focused — both numbers are reported honestly in `results/metrics.json`.
 
-## ⚙️ Technologies
+## Final evaluation (untouched test set, n=1,500)
 
-* **Python**
-* **TensorFlow / Keras**
-* **Scikit-learn**
-* **Pandas**
-* **NumPy**
-* **Streamlit**
-* **Jupyter Notebook**
-* **Git & GitHub**
+| Metric | Value |
+|---|---|
+| Accuracy | 0.7927 |
+| Precision | 0.4935 |
+| Recall | 0.7443 |
+| F1 | 0.5935 |
+| ROC-AUC | 0.8603 |
+| PR-AUC | 0.7185 |
 
-## 🔄 Data Preprocessing
+Confusion matrix (test): `[[962, 233], [78, 227]]`
+(rows actual retained/churned, cols predicted retained/churned).
 
-The application uses the same preprocessing pipeline during inference that was used during model development.
+Train/val/test gap — acc 0.8166 / 0.8047 / 0.7927, F1 0.6393 / 0.6219 / 0.5935,
+ROC-AUC 0.8969 / 0.8788 / 0.8603 — small and healthy (the original run showed
+train loss ~0.24 vs val loss ~0.50, i.e. clear overfitting; lr 0.01 was also too
+high — its best epoch was 3).
 
-### Categorical Encoding
+![training curves](results/training_curves.png)
+![confusion matrix](results/confusion_matrix.png)
 
-**Geography**
+Unseen-sample spot checks (`test_verify.py`): high-risk profile p=0.979 → churn;
+low-risk p=0.012 → retained; original notebook example (France/Male/40) p=0.140
+→ retained. Edge cases (unknown Geography/Gender, missing field) raise clear
+`ValueError`s.
 
-```python
-OneHotEncoder
-```
-
-**Gender**
-
-```python
-LabelEncoder
-```
-
-### Numerical Scaling
-
-Numerical features are transformed using a trained scaler before being passed to the neural network.
-
-The preprocessing artifacts are persisted and loaded by the Streamlit application.
-
-## 📁 Repository Structure
-
-```text
-ANN-classification/
-│
-├── app.py
-├── Churn_Modelling.csv
-│
-├── experiments.ipynb
-├── prediction.ipynb
-│
-├── model.h5
-├── scaler.pkl
-├── onehot_encoder_geo.pkl
-├── label_encoder_gender.pkl
-│
-├── requirements.txt
-├── LICENSE
-└── README.md
-```
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-* Python 3.10 / 3.11
-* Git
-* pip
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/bharat-02/ANN-classification.git
-cd ANN-classification
-```
-
-### 2. Create a virtual environment
-
-```bash
-python -m venv venv
-```
-
-### 3. Activate the environment
-
-**Windows PowerShell**
+## Installation & run
 
 ```powershell
+git clone https://github.com/bharat-02/ANN-classification.git
+cd ANN-classification
+python -m venv venv
 .\venv\Scripts\Activate.ps1
-```
-
-**Windows CMD**
-
-```cmd
-venv\Scripts\activate
-```
-
-### 4. Install dependencies
-
-```bash
 python -m pip install -r requirements.txt
 ```
 
-### 5. Run the application
+Train + evaluate + save artifacts + plots:
 
-```bash
+```powershell
+.\venv\Scripts\python.exe train.py
+```
+
+Verify (save/load, unseen samples, edge cases, overfitting check):
+
+```powershell
+.\venv\Scripts\python.exe test_verify.py
+```
+
+Launch the app:
+
+```powershell
 python -m streamlit run app.py
+# http://localhost:8501
 ```
 
-The application will be available at:
+Programmatic inference:
 
-```text
-http://localhost:8501
+```python
+from predict import predict_churn
+proba, label = predict_churn({"CreditScore": 600, "Geography": "France",
+    "Gender": "Male", "Age": 40, "Tenure": 3, "Balance": 60000.0,
+    "NumOfProducts": 2, "HasCrCard": 1, "IsActiveMember": 1,
+    "EstimatedSalary": 50000.0})
 ```
 
-## 🌐 Deployment
+## GPU / CPU
 
-The application is deployed using **Streamlit Community Cloud**.
+Verified: `tf.config.list_physical_devices()` → CPU only, no GPU devices.
+The installed `tensorflow==2.15.0` is the Intel CPU build, so the RTX 3050 is
+**not** used; training runs on CPU (fast enough here: 7k rows, small nets).
+GPU training would require an NVIDIA CUDA-enabled TF build (typically via WSL2),
+which was intentionally not introduced to avoid breaking the working env.
 
-### Live Application
+## Limitations & reproducibility
 
-**[Open the deployed application →](https://ann-classification-msga88z4jmnzvharlhnwbf.streamlit.app/)**
-
-The deployed application provides an interactive interface where users can enter customer attributes and receive a churn prediction.
-
-## 📊 Prediction Workflow
-
-```text
-User Input
-    ↓
-Input Validation
-    ↓
-Categorical Encoding
-    ↓
-Feature Scaling
-    ↓
-ANN Inference
-    ↓
-Churn Probability
-    ↓
-Classification Result
-```
-
-## 💾 Model Artifacts
-
-The repository contains the trained model and preprocessing artifacts required for inference:
-
-| File                       | Purpose                  |
-| -------------------------- | ------------------------ |
-| `model.h5`                 | Trained ANN model        |
-| `scaler.pkl`               | Numerical feature scaler |
-| `onehot_encoder_geo.pkl`   | Geography encoder        |
-| `label_encoder_gender.pkl` | Gender encoder           |
-
-Persisting these artifacts ensures that inference uses the same transformations established during model development.
-
-## 📓 Development Notebooks
-
-### `experiments.ipynb`
-
-Contains the model development and experimentation workflow, including data preparation and ANN training.
-
-### `prediction.ipynb`
-
-Contains the prediction and inference workflow for the trained model.
-
-## 🔬 Key Implementation Concepts
-
-This project demonstrates practical implementation of:
-
-* Binary classification
-* Artificial Neural Networks
-* Feature engineering
-* One-hot encoding
-* Label encoding
-* Feature scaling
-* Model persistence
-* Real-time model inference
-* Streamlit application development
-* Machine learning deployment
-
-## 🔮 Future Enhancements
-
-Potential improvements include:
-
-* Hyperparameter optimization
-* Cross-validation
-* Model performance benchmarking
-* Explainable AI integration
-* Prediction probability visualization
-* Improved input validation
-* Model versioning
-* Automated CI/CD deployment
-* Production-grade API integration
-
-## 👨‍💻 Author
-
-### Bharat Kumar
-
-**Data Science & Machine Learning Enthusiast**
-
-* GitHub: [bharat-02](https://github.com/bharat-02)
-* LinkedIn: [Bharat Kumar](https://www.linkedin.com/in/bharat-kumar-a74b26346/)
-
----
-
-⭐ If you find this project useful, consider giving the repository a star.
-
-**Live Demo:** [ANN Customer Churn Prediction](https://ann-classification-msga88z4jmnzvharlhnwbf.streamlit.app/)
+- Fixed seed (42) for splits/seeds; CPU results are reproducible, GPU would add variance.
+- `salaryregression.ipynb` (predicting `EstimatedSalary`, MAE ≈ 50k ≈ mean-prediction)
+  is unrelated to this classification objective, uses `Exited` as an input feature,
+  and used to overwrite the shared `scaler.pkl` with an incompatible feature set —
+  it is kept only as history and **deprecated**; `train.py` artifacts are canonical.
+- `hyperparametertuningann.ipynb` grid search was never executed; `train.py` replaces it.
+- Single 70/15/15 split (no k-fold) to keep compute reasonable.
+- Secrets/model-registry/versioning out of scope; `model.h5` + pickles are committed
+  (small, ~70 KB total) because the Streamlit app loads them directly.
