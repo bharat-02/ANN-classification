@@ -1,0 +1,9 @@
+feature,vif,flag
+CreditScore,1.001,ok
+Age,1.011,ok
+Tenure,1.003,ok
+Balance,1.109,ok
+NumOfProducts,1.11,ok
+HasCrCard,1.002,ok
+IsActiveMember,1.01,ok
+EstimatedSalary,1.001,ok

@@ -58,6 +58,8 @@ from tensorflow.keras.layers import Dense, Dropout
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.optimizers import Adam
 
+from config import CHURN_THRESHOLD
+
 BASE = Path(__file__).parent
 CSV = BASE / "Churn_Modelling.csv"
 RESULTS = BASE / "results"
@@ -147,9 +149,9 @@ def fit_ann(model, Xtr, y_tr, Xval, y_val, class_weight=None, epochs=100, patien
     return hist, int(np.argmin(hist.history["val_loss"]) + 1)
 
 
-def ann_metrics(model, X, y):
+def ann_metrics(model, X, y, threshold=CHURN_THRESHOLD):
     p = model.predict(X, verbose=0).ravel()
-    pred = (p >= 0.5).astype(int)
+    pred = (p >= threshold).astype(int)
     return {
         "accuracy": float(accuracy_score(y, pred)),
         "precision": float(precision_score(y, pred, zero_division=0)),

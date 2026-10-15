@@ -14,6 +14,15 @@ regressionlogs/
 *.log
 # Streamlit secrets (never commit)
 .streamlit/secrets.toml
+# Local secrets / environment configs (never commit)
+.env
+*.env
+# Local scratch / backup files (never commit)
+scratch/
+local_notes/
+*.bak
+*~
+*.swp
 # OS / editors
 .DS_Store
 Thumbs.db

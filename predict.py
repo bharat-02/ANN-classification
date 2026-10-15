@@ -12,6 +12,8 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 
+from config import CHURN_THRESHOLD  # single source of truth (defined in config.py)
+
 BASE = Path(__file__).parent
 
 _MODEL = None
@@ -39,7 +41,10 @@ def _load():
 def predict_churn(payload: dict) -> tuple[float, int]:
     """payload keys: CreditScore, Geography, Gender, Age, Tenure, Balance,
     NumOfProducts, HasCrCard, IsActiveMember, EstimatedSalary.
-    Returns (probability, label). Raises ValueError on invalid input."""
+    Returns (probability, label) with label = int(proba >= CHURN_THRESHOLD).
+    The threshold is fixed (config.py) and intentionally NOT a parameter:
+    the UI must not let users change model behavior. Raises ValueError
+    on invalid input."""
     model, le, ohe, scaler, features = _load()
     required = ["CreditScore", "Geography", "Gender", "Age", "Tenure",
                 "Balance", "NumOfProducts", "HasCrCard", "IsActiveMember",
@@ -60,4 +65,7 @@ def predict_churn(payload: dict) -> tuple[float, int]:
     row = pd.concat([row.drop(columns=["Geography"]), geo_df], axis=1)[features]
     x = scaler.transform(row)
     proba = float(model.predict(x, verbose=0)[0][0])
-    return proba, int(proba >= 0.5)
+    # Single-neuron sigmoid output: model was trained with y = Exited
+    # (1 = churned), so output[0][0] IS P(churn). No column selection needed.
+    label = int(proba >= CHURN_THRESHOLD)
+    return proba, label

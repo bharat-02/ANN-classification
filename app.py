@@ -9,6 +9,7 @@ Fixes vs original app.py:
 """
 import streamlit as st
 
+from config import CHURN_THRESHOLD
 from predict import predict_churn
 
 st.set_page_config(page_title="Customer Churn Prediction", layout="centered")
@@ -29,7 +30,8 @@ with st.form("churn_form"):
         num_of_products = st.slider("Number of Products", 1, 4, 1)
         has_cr_card = st.selectbox("Has Credit Card", [0, 1])
         is_active_member = st.selectbox("Is Active Member", [0, 1])
-    threshold = st.slider("Churn threshold", 0.1, 0.9, 0.5, 0.05)
+    # No threshold control: classification always uses the fixed
+    # CHURN_THRESHOLD from config.py (same value as training/evaluation).
     submitted = st.form_submit_button("Predict")
 
 if submitted:
@@ -40,10 +42,12 @@ if submitted:
         "IsActiveMember": int(is_active_member), "EstimatedSalary": estimated_salary,
     }
     try:
-        proba, _ = predict_churn(payload)
+        proba, label = predict_churn(payload)
         st.metric("Churn probability", f"{proba:.3f}")
         st.progress(min(max(proba, 0.0), 1.0))
-        if proba >= threshold:
+        st.caption(f"Fixed decision threshold: {CHURN_THRESHOLD:.2f} "
+                   "(label = 1 iff probability ≥ threshold)")
+        if label == 1:
             st.error("The customer is likely to churn.")
         else:
             st.success("The customer is not likely to churn.")

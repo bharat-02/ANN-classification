@@ -6,6 +6,7 @@ import tensorflow as tf
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
 
+from config import CHURN_THRESHOLD
 from predict import predict_churn
 
 print("== 1. artifacts load ==")
@@ -65,7 +66,65 @@ def tx(frame):
 
 for name, Xr_, yr_ in [("train", Xtr_raw, ytr), ("val", Xva_raw, yva), ("test", Xte_raw, yte)]:
     p = model.predict(tx(Xr_), verbose=0).ravel()
-    pred = (p >= 0.5).astype(int)
+    pred = (p >= CHURN_THRESHOLD).astype(int)
     print(f"  {name}: acc={accuracy_score(yr_, pred):.4f} "
           f"f1={f1_score(yr_, pred):.4f} roc={roc_auc_score(yr_, p):.4f}")
+
+print("== 5. fixed threshold behavior (below / at / above 0.5) ==")
+import inspect
+from config import CHURN_THRESHOLD as T
+assert T == 0.5, "training/eval threshold must stay 0.5"
+assert list(inspect.signature(predict_churn).parameters) == ["payload"], \
+    "predict_churn must take only payload (fixed threshold, no kwarg)"
+for s in samples:
+    p, label = predict_churn(s)
+    assert label == int(p >= T), f"label rule broken at p={p}"
+    side = "below" if p < 0.5 else "above"
+    print(f"  p={p:.4f} ({side} 0.5) label={label} OK")
+# exact boundary: rule is >=, so p == 0.5 -> churn (matches training labels)
+assert int(0.5 >= T) == 1
+print("  boundary p == 0.5 -> label 1 (>= semantics) OK")
+# the reported TypeError shape is gone: no threshold kwarg exists anymore
+try:
+    predict_churn(samples[0], threshold=0.65)
+    raise AssertionError("threshold kwarg unexpectedly accepted")
+except TypeError as e:
+    print(f"  threshold kwarg correctly rejected: {e}")
+
+print("== 6. single authoritative threshold, no duplicates ==")
+import re
+import pathlib
+py_files = ("config.py", "predict.py", "app.py", "train.py", "test_verify.py")
+hits = []
+for f in py_files:
+    for i, line in enumerate(pathlib.Path(f).read_text().splitlines(), 1):
+        code = line.split("#", 1)[0]  # ignore comments
+        # Flag decision comparisons against a hardcoded 0.5 literal
+        # (e.g. ">= 0.5"); LR factors like "factor=0.5" have no ">" and pass.
+        if re.search(r">=?\s*0\.5\b", code) and "CHURN_THRESHOLD" not in code:
+            hits.append(f"{f}:{i}: {line.strip()}")
+# Flag any production caller passing a threshold kwarg (the reported
+# TypeError shape). test_verify.py is excluded: it holds the intentional
+# negative test proving the kwarg is rejected.
+for f in ("config.py", "predict.py", "app.py", "train.py"):
+    for i, line in enumerate(pathlib.Path(f).read_text().splitlines(), 1):
+        code = line.split("#", 1)[0]
+        if re.search(r"predict_churn\([^)]*threshold\s*=", code):
+            hits.append(f"{f}:{i}: {line.strip()}")
+assert not hits, f"hardcoded/duplicate thresholds found: {hits}"
+defs = [(f, i, l.strip()) for f in py_files
+        for i, l in enumerate(pathlib.Path(f).read_text().splitlines(), 1)
+        if re.match(r"\s*CHURN_THRESHOLD\s*=", l)]
+assert len(defs) == 1 and defs[0][0] == "config.py", f"expected one definition in config.py, got {defs}"
+import config
+import predict as predict_mod
+assert predict_mod.CHURN_THRESHOLD is config.CHURN_THRESHOLD  # re-export, not a copy
+assert config.CHURN_THRESHOLD == 0.5
+print(f"  authoritative: config.py CHURN_THRESHOLD = {config.CHURN_THRESHOLD} OK")
+print("== 7. no threshold UI control in app.py ==")
+app_src = pathlib.Path("app.py").read_text()
+for pat in ("Churn threshold", "threshold=threshold", "session_state"):
+    assert pat not in app_src, f"obsolete UI reference still present: {pat}"
+assert "st.slider" in app_src  # other (feature) sliders remain
+print("  no Churn-threshold control, no session-state, no kwarg passing OK")
 print("ALL CHECKS PASSED")

@@ -136,7 +136,7 @@ Verify (save/load, unseen samples, edge cases, overfitting check):
 Launch the app:
 
 ```powershell
-python -m streamlit run app.py
+.\venv\Scripts\python.exe -m streamlit run app.py
 # http://localhost:8501
 ```
 
@@ -149,6 +149,15 @@ proba, label = predict_churn({"CreditScore": 600, "Geography": "France",
     "NumOfProducts": 2, "HasCrCard": 1, "IsActiveMember": 1,
     "EstimatedSalary": 50000.0})
 ```
+
+## Decision threshold
+
+One single source of truth: `CHURN_THRESHOLD = 0.5` in `config.py`
+(label = 1 iff probability ≥ threshold). Training/validation metrics,
+`test_verify.py`, the backend (`predict.py` re-exports it), and the app all
+use this constant; the Streamlit app exposes exactly one threshold slider
+(default 0.5) and displays the active value next to each verdict, so the
+shown threshold always equals the one used for classification.
 
 ## GPU / CPU
 

@@ -1,0 +1,27 @@
+feature,dtype,method,value,detail,n
+CreditScore,numeric,point_biserial_r,-0.037,p=0.00196 train-only,7000
+CreditScore,numeric,single_feature_roc_auc,0.5242,direction-agnostic train-only,7000
+CreditScore,numeric,mutual_info,0.0,sklearn train-only,7000
+Age,numeric,point_biserial_r,0.266,p=1.01e-113 train-only,7000
+Age,numeric,single_feature_roc_auc,0.72,direction-agnostic train-only,7000
+Age,numeric,mutual_info,0.0656,sklearn train-only,7000
+Tenure,numeric,point_biserial_r,0.0067,p=0.573 train-only,7000
+Tenure,numeric,single_feature_roc_auc,0.5048,direction-agnostic train-only,7000
+Tenure,numeric,mutual_info,0.0,sklearn train-only,7000
+Balance,numeric,point_biserial_r,0.1144,p=7.94e-22 train-only,7000
+Balance,numeric,single_feature_roc_auc,0.5755,direction-agnostic train-only,7000
+Balance,numeric,mutual_info,0.0088,sklearn train-only,7000
+NumOfProducts,numeric,point_biserial_r,-0.0353,p=0.00318 train-only,7000
+NumOfProducts,numeric,single_feature_roc_auc,0.5712,direction-agnostic train-only,7000
+NumOfProducts,numeric,mutual_info,0.0665,sklearn train-only,7000
+HasCrCard,numeric,point_biserial_r,-0.0069,p=0.566 train-only,7000
+HasCrCard,numeric,single_feature_roc_auc,0.5039,direction-agnostic train-only,7000
+HasCrCard,numeric,mutual_info,0.0,sklearn train-only,7000
+IsActiveMember,numeric,point_biserial_r,-0.1499,p=1.77e-36 train-only,7000
+IsActiveMember,numeric,single_feature_roc_auc,0.593,direction-agnostic train-only,7000
+IsActiveMember,numeric,mutual_info,0.0108,sklearn train-only,7000
+EstimatedSalary,numeric,point_biserial_r,0.0216,p=0.0702 train-only,7000
+EstimatedSalary,numeric,single_feature_roc_auc,0.5155,direction-agnostic train-only,7000
+EstimatedSalary,numeric,mutual_info,0.003,sklearn train-only,7000
+Geography,categorical,cramers_v_vs_target,0.1775,"chi2_p=5.03e-49; train churn-rate by category: {""France"": 0.1605, ""Germany"": 0.3278, ""Spain"": 0.1656} train-only",7000
+Gender,categorical,cramers_v_vs_target,0.1035,"chi2_p=2.86e-18; train churn-rate by category: {""Female"": 0.2505, ""Male"": 0.1658} train-only",7000
